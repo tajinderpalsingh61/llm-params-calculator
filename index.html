@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transformer Parameter Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3a;
+    --border-hover: #3a3a5a;
+    --text: #e4e4ef;
+    --text-dim: #8888a0;
+    --accent: #6c5ce7;
+    --accent-glow: rgba(108, 92, 231, 0.15);
+    --accent2: #00cec9;
+    --accent3: #fd79a8;
+    --accent4: #fdcb6e;
+    --accent5: #55efc4;
+    --danger: #ff6b6b;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(108,92,231,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,92,231,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe, #00cec9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+
+  header p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+  }
+
+  .card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+
+  .input-group {
+    margin-bottom: 18px;
+  }
+
+  .input-group label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .input-group label .hint {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .input-group input[type="number"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .input-group input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  .input-group input::-webkit-inner-spin-button { opacity: 1; }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+  }
+
+  .checkbox-row input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .error-msg {
+    background: rgba(255,107,107,0.08);
+    border: 1px solid rgba(255,107,107,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--danger);
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .error-msg.show { display: block; }
+
+  .results-area {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Total banner */
+  .total-banner {
+    background: linear-gradient(135deg, rgba(108,92,231,0.12), rgba(0,206,201,0.08));
+    border: 1px solid rgba(108,92,231,0.25);
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .total-banner .label {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+
+  .total-banner .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #a29bfe, #00cec9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .total-banner .sub-values {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .total-banner .sub-val {
+    text-align: center;
+  }
+
+  .total-banner .sub-val .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .total-banner .sub-val .lbl {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  /* Table */
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  thead th {
+    text-align: left;
+    padding: 12px 14px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    vertical-align: middle;
+  }
+
+  tbody tr:hover { background: rgba(108,92,231,0.04); }
+
+  .layer-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+  }
+
+  .layer-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+  }
+
+  .param-bar-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .param-bar {
+    height: 6px;
+    border-radius: 3px;
+    min-width: 4px;
+    transition: width 0.4s ease;
+  }
+
+  /* Architecture diagram */
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 16px 0;
+  }
+
+  .arch-block {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    border: 1px solid;
+  }
+
+  .arch-arrow {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+  }
+
+  .arch-block.norm { background: rgba(108,92,231,0.1); border-color: rgba(108,92,231,0.3); color: #a29bfe; }
+  .arch-block.attn { background: rgba(0,206,201,0.1); border-color: rgba(0,206,201,0.3); color: #00cec9; }
+  .arch-block.ffn { background: rgba(253,203,110,0.1); border-color: rgba(253,203,110,0.3); color: #fdcb6e; }
+  .arch-block.out { background: rgba(85,239,196,0.1); border-color: rgba(85,239,196,0.3); color: #55efc4; }
+  .arch-block.res { background: rgba(253,121,168,0.08); border-color: rgba(253,121,168,0.25); color: #fd79a8; font-size: 0.65rem; }
+
+  .num-layers-note {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    padding: 4px 0 8px;
+  }
+
+  /* Memory estimate */
+  .memory-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .mem-chip {
+    flex: 1;
+    min-width: 140px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+
+  .mem-chip .mem-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .mem-chip .mem-lbl {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 40px 0 0;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="container">
+  <header>
+    <h1>🔢 Transformer Param Calculator</h1>
+    <p>Enter your model config and see the parameter breakdown instantly</p>
+  </header>
+
+  <div class="grid">
+    <!-- Inputs -->
+    <div class="card">
+      <div class="card-title">Model Configuration</div>
+
+      <div class="input-group">
+        <label>Embedding Dim (d_model) <span class="hint">e.g. 768</span></label>
+        <input type="number" id="embed_dim" value="768" min="1">
+      </div>
+      <div class="input-group">
+        <label>Attention Heads <span class="hint">must divide d_model</span></label>
+        <input type="number" id="num_heads" value="12" min="1">
+      </div>
+      <div class="input-group">
+        <label>FFN Inner Dim <span class="hint">usually 4 × d_model</span></label>
+        <input type="number" id="ffn_dim" value="3072" min="1">
+      </div>
+      <div class="input-group">
+        <label>Vocab Size</label>
+        <input type="number" id="vocab_size" value="30522" min="1">
+      </div>
+      <div class="input-group">
+        <label>Max Seq Length</label>
+        <input type="number" id="seq_len" value="512" min="1">
+      </div>
+      <div class="input-group">
+        <label>Number of Layers <span class="hint">transformer blocks</span></label>
+        <input type="number" id="num_layers" value="12" min="1">
+      </div>
+
+      <div style="margin-top: 20px; margin-bottom: 6px;">
+        <div class="card-title" style="margin-bottom: 14px;">Options</div>
+        <div class="checkbox-row"><input type="checkbox" id="attn_bias"><label for="attn_bias">Attention bias (Q,K,V,O)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="ffn_bias" checked><label for="ffn_bias">FFN bias</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="out_bias"><label for="out_bias">Output head bias</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="pos_embed" checked><label for="pos_embed">Positional embeddings (learned)</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="tie_weights"><label for="tie_weights">Tie input/output embeddings</label></div>
+      </div>
+
+      <div id="error" class="error-msg"></div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-area">
+      <!-- Architecture -->
+      <div class="card" style="padding: 20px 28px;">
+        <div class="arch-flow" id="archFlow"></div>
+        <div class="num-layers-note" id="layersNote"></div>
+      </div>
+
+      <!-- Total -->
+      <div class="total-banner" id="totalBanner"></div>
+
+      <!-- Memory -->
+      <div class="card">
+        <div class="card-title">Memory Estimate (Inference)</div>
+        <div class="memory-row" id="memoryRow"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="card-title">Layer Breakdown (per block)</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Layer</th>
+                <th>Weight Shape</th>
+                <th>Params</th>
+                <th style="width:35%">Share</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Built for learning &mdash; <a href="https://github.com" target="_blank">Host free on GitHub Pages</a>
+  </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const COLORS = {
+  'Token Embedding':   '#a29bfe',
+  'Position Embedding':'#a29bfe',
+  'LayerNorm 1':       '#6c5ce7',
+  'Q Projection':      '#00cec9',
+  'K Projection':      '#00cec9',
+  'V Projection':      '#00cec9',
+  'O Projection':      '#00cec9',
+  'Attn Q Bias':       '#00b4ad',
+  'Attn K Bias':       '#00b4ad',
+  'Attn V Bias':       '#00b4ad',
+  'Attn O Bias':       '#00b4ad',
+  'LayerNorm 2':       '#6c5ce7',
+  'FFN Up (W1)':       '#fdcb6e',
+  'FFN Down (W2)':     '#fdcb6e',
+  'FFN Bias 1':        '#f9ca24',
+  'FFN Bias 2':        '#f9ca24',
+  'Output Head':       '#55efc4',
+  'Output Bias':       '#55efc4',
+};
+
+function fmt(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+  return n.toString();
+}
+
+function fmtMem(bytes) {
+  if (bytes >= 1024**3) return (bytes / 1024**3).toFixed(2) + ' GB';
+  if (bytes >= 1024**2) return (bytes / 1024**2).toFixed(1) + ' MB';
+  if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return bytes + ' B';
+}
+
+function calculate() {
+  const d   = parseInt($('embed_dim').value) || 0;
+  const h   = parseInt($('num_heads').value) || 0;
+  const ff  = parseInt($('ffn_dim').value) || 0;
+  const V   = parseInt($('vocab_size').value) || 0;
+  const S   = parseInt($('seq_len').value) || 0;
+  const L   = parseInt($('num_layers').value) || 0;
+  const aBias = $('attn_bias').checked;
+  const fBias = $('ffn_bias').checked;
+  const oBias = $('out_bias').checked;
+  const posE  = $('pos_embed').checked;
+  const tieW  = $('tie_weights').checked;
+
+  const errEl = $('error');
+
+  // Validation
+  if (d < 1 || h < 1 || ff < 1 || V < 1 || S < 1 || L < 1) {
+    errEl.textContent = 'All values must be ≥ 1';
+    errEl.classList.add('show');
+    return;
+  }
+  if (d % h !== 0) {
+    errEl.textContent = `embed_dim (${d}) must be divisible by num_heads (${h}). Head dim would be ${(d/h).toFixed(2)}.`;
+    errEl.classList.add('show');
+    return;
+  }
+  errEl.classList.remove('show');
+
+  // Per-block layers
+  const layers = [];
+
+  // LayerNorm 1: gamma + beta
+  layers.push({ name: 'LayerNorm 1', shape: `(${d},) + (${d},)`, params: 2 * d, per: 'block' });
+
+  // Attention: Q, K, V, O
+  layers.push({ name: 'Q Projection', shape: `(${d}, ${d})`, params: d * d, per: 'block' });
+  layers.push({ name: 'K Projection', shape: `(${d}, ${d})`, params: d * d, per: 'block' });
+  layers.push({ name: 'V Projection', shape: `(${d}, ${d})`, params: d * d, per: 'block' });
+  layers.push({ name: 'O Projection', shape: `(${d}, ${d})`, params: d * d, per: 'block' });
+
+  if (aBias) {
+    layers.push({ name: 'Attn Q Bias', shape: `(${d},)`, params: d, per: 'block' });
+    layers.push({ name: 'Attn K Bias', shape: `(${d},)`, params: d, per: 'block' });
+    layers.push({ name: 'Attn V Bias', shape: `(${d},)`, params: d, per: 'block' });
+    layers.push({ name: 'Attn O Bias', shape: `(${d},)`, params: d, per: 'block' });
+  }
+
+  // LayerNorm 2
+  layers.push({ name: 'LayerNorm 2', shape: `(${d},) + (${d},)`, params: 2 * d, per: 'block' });
+
+  // FFN
+  layers.push({ name: 'FFN Up (W1)', shape: `(${d}, ${ff})`, params: d * ff, per: 'block' });
+  if (fBias) layers.push({ name: 'FFN Bias 1', shape: `(${ff},)`, params: ff, per: 'block' });
+  layers.push({ name: 'FFN Down (W2)', shape: `(${ff}, ${d})`, params: ff * d, per: 'block' });
+  if (fBias) layers.push({ name: 'FFN Bias 2', shape: `(${d},)`, params: d, per: 'block' });
+
+  // Non-block layers
+  const globalLayers = [];
+  globalLayers.push({ name: 'Token Embedding', shape: `(${V}, ${d})`, params: V * d, per: 'global' });
+  if (posE) {
+    globalLayers.push({ name: 'Position Embedding', shape: `(${S}, ${d})`, params: S * d, per: 'global' });
+  }
+
+  const outParams = tieW ? 0 : V * d;
+  if (!tieW) {
+    globalLayers.push({ name: 'Output Head', shape: `(${d}, ${V})`, params: outParams, per: 'global' });
+  }
+  if (oBias && !tieW) {
+    globalLayers.push({ name: 'Output Bias', shape: `(${V},)`, params: V, per: 'global' });
+  } else if (oBias && tieW) {
+    globalLayers.push({ name: 'Output Bias', shape: `(${V},)`, params: V, per: 'global' });
+  }
+
+  const perBlock = layers.reduce((s, l) => s + l.params, 0);
+  const globalTotal = globalLayers.reduce((s, l) => s + l.params, 0);
+  const total = perBlock * L + globalTotal;
+
+  // Architecture flow
+  const archFlow = $('archFlow');
+  const blocks = [
+    ['Embed', 'norm'], ['+ Pos', 'norm'],
+    ['LayerNorm', 'norm'], ['Multi-Head Attn', 'attn'], ['+ Residual', 'res'],
+    ['LayerNorm', 'norm'], ['FFN', 'ffn'], ['+ Residual', 'res'],
+    ['Output Head', 'out']
+  ];
+  archFlow.innerHTML = blocks.map((b, i) =>
+    `<span class="arch-block ${b[1]}">${b[0]}</span>` +
+    (i < blocks.length - 1 ? '<span class="arch-arrow">→</span>' : '')
+  ).join('');
+  $('layersNote').textContent = `× ${L} layer${L > 1 ? 's' : ''} (blocks repeat)`;
+
+  // Total banner
+  $('totalBanner').innerHTML = `
+    <div>
+      <div class="label">Total Parameters</div>
+      <div class="value">${fmt(total)}</div>
+    </div>
+    <div class="sub-values">
+      <div class="sub-val"><div class="num">${fmt(perBlock)}</div><div class="lbl">Per Block</div></div>
+      <div class="sub-val"><div class="num">${fmt(perBlock * L)}</div><div class="lbl">All ${L} Blocks</div></div>
+      <div class="sub-val"><div class="num">${fmt(globalTotal)}</div><div class="lbl">Embeddings + Head</div></div>
+    </div>
+  `;
+
+  // Memory
+  const fp32 = total * 4;
+  const fp16 = total * 2;
+  const int8 = total * 1;
+  const int4 = total * 0.5;
+  $('memoryRow').innerHTML = `
+    <div class="mem-chip"><div class="mem-val">${fmtMem(fp32)}</div><div class="mem-lbl">FP32</div></div>
+    <div class="mem-chip"><div class="mem-val">${fmtMem(fp16)}</div><div class="mem-lbl">FP16 / BF16</div></div>
+    <div class="mem-chip"><div class="mem-val">${fmtMem(int8)}</div><div class="mem-lbl">INT8</div></div>
+    <div class="mem-chip"><div class="mem-val">${fmtMem(int4)}</div><div class="mem-lbl">INT4</div></div>
+  `;
+
+  // Table
+  const allLayers = [...globalLayers, ...layers];
+  const maxParams = Math.max(...allLayers.map(l => l.params));
+  const tbody = $('tableBody');
+  tbody.innerHTML = '';
+
+  // Global layers
+  globalLayers.forEach(l => {
+    const pct = (l.params / total * 100).toFixed(1);
+    const barW = Math.max(2, (l.params / maxParams) * 100);
+    const color = COLORS[l.name] || '#a29bfe';
+    tbody.innerHTML += `<tr>
+      <td><div class="layer-name"><span class="layer-dot" style="background:${color}"></span>${l.name}</div></td>
+      <td class="mono">${l.shape}</td>
+      <td class="mono">${fmt(l.params)}</td>
+      <td><div class="param-bar-cell"><div class="param-bar" style="width:${barW}%;background:${color}"></div><span class="mono" style="color:var(--text-dim)">${pct}%</span></div></td>
+    </tr>`;
+  });
+
+  // Separator
+  tbody.innerHTML += `<tr><td colspan="4" style="padding:4px 14px;border-bottom:2px solid var(--border);font-size:0.72rem;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Per Transformer Block × ${L}</td></tr>`;
+
+  layers.forEach(l => {
+    const totalForLayer = l.params * L;
+    const pct = (totalForLayer / total * 100).toFixed(1);
+    const barW = Math.max(2, (l.params / maxParams) * 100);
+    const color = COLORS[l.name] || '#888';
+    tbody.innerHTML += `<tr>
+      <td><div class="layer-name"><span class="layer-dot" style="background:${color}"></span>${l.name}</div></td>
+      <td class="mono">${l.shape}</td>
+      <td class="mono">${fmt(l.params)} <span style="color:var(--text-dim);font-size:0.72rem">× ${L} = ${fmt(totalForLayer)}</span></td>
+      <td><div class="param-bar-cell"><div class="param-bar" style="width:${barW}%;background:${color}"></div><span class="mono" style="color:var(--text-dim)">${pct}%</span></div></td>
+    </tr>`;
+  });
+}
+
+// Auto-calculate on any input change
+document.querySelectorAll('input').forEach(el =>
+  el.addEventListener('input', calculate)
+);
+
+// Initial run
+calculate();
+</script>
+</body>
+</html>
